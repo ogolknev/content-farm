@@ -1,0 +1,18 @@
+services:
+  n8n:
+    container_name: content-farm-n8n
+    build: .
+    userns: keep-id
+    ports:
+      - "5678:5678"
+    env_file:
+      - .env
+    volumes:
+      - n8n-data:/data
+      - ./scripts:/data/scripts
+      - ./io:/data/io
+      - ./n8n_workflows:/data/n8n_workflows:ro
+    restart: unless-stopped
+
+volumes:
+  n8n-data:

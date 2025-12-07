@@ -1,0 +1,138 @@
+{
+  "name": "Clip Factory",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "081f5883-ac5d-48c1-900a-225d1f08d02a",
+      "name": "When clicking 'Execute workflow'"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "INPUT_DIR",
+              "value": "/data/scripts/clip_factory/input"
+            },
+            {
+              "name": "TEMP_DIR",
+              "value": "/data/scripts/clip_factory/temp"
+            },
+            {
+              "name": "OUTPUT_DIR",
+              "value": "/data/scripts/clip_factory/output"
+            },
+            {
+              "name": "PYTHON_BIN",
+              "value": "python3"
+            },
+            {
+              "name": "SCRIPT_DIR",
+              "value": "/data/scripts/clip_factory"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [208, 0],
+      "id": "def12345-6789-abcd-ef01-234567890abc",
+      "name": "Set Parameters"
+    },
+    {
+      "parameters": {
+        "command": "=VIDEO=$(LC_ALL=C find {{ $('Set Parameters').item.json.INPUT_DIR }} -maxdepth 1 -type f \\( -name '*.mp4' -o -name '*.avi' -o -name '*.mkv' -o -name '*.mov' \\) | head -n 1); {{ $('Set Parameters').item.json.PYTHON_BIN }} {{ $('Set Parameters').item.json.SCRIPT_DIR }}/clip_factory.py detect-scenes \"$VIDEO\" --sampling-fps 1 --threshold 0.6 --min-length 10 --max-length 60 > {{ $('Set Parameters').item.json.TEMP_DIR }}/scenes.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [416, 0],
+      "id": "51fb2067-ecfe-4b8d-982d-0285de7242d1",
+      "name": "Detect Scenes"
+    },
+    {
+      "parameters": {
+        "command": "=VIDEO=$(LC_ALL=C find {{ $('Set Parameters').item.json.INPUT_DIR }} -maxdepth 1 -type f \\( -name '*.mp4' -o -name '*.avi' -o -name '*.mkv' -o -name '*.mov' \\) | head -n 1); {{ $('Set Parameters').item.json.PYTHON_BIN }} {{ $('Set Parameters').item.json.SCRIPT_DIR }}/clip_factory.py transcribe \"$VIDEO\" {{ $('Set Parameters').item.json.TEMP_DIR }}/scenes.json --model small --language ru > {{ $('Set Parameters').item.json.TEMP_DIR }}/transcribed.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [624, 0],
+      "id": "73b83a38-31a9-40f0-830b-3e5f7104f083",
+      "name": "Transcribe"
+    },
+    {
+      "parameters": {
+        "command": "={{ $('Set Parameters').item.json.PYTHON_BIN }} {{ $('Set Parameters').item.json.SCRIPT_DIR }}/clip_factory.py score {{ $('Set Parameters').item.json.TEMP_DIR }}/transcribed.json --top 10 > {{ $('Set Parameters').item.json.TEMP_DIR }}/top_scenes.json"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [832, 0],
+      "id": "b0b9b5f9-2f8f-4a3e-9a11-6d6a2f8c9d21",
+      "name": "Score Scenes"
+    },
+    {
+      "parameters": {
+        "command": "=VIDEO=$(LC_ALL=C find {{ $('Set Parameters').item.json.INPUT_DIR }} -maxdepth 1 -type f \\( -name '*.mp4' -o -name '*.avi' -o -name '*.mkv' -o -name '*.mov' \\) | head -n 1); {{ $('Set Parameters').item.json.PYTHON_BIN }} {{ $('Set Parameters').item.json.SCRIPT_DIR }}/clip_factory.py extract-scenes \"$VIDEO\" {{ $('Set Parameters').item.json.TEMP_DIR }}/top_scenes.json --output {{ $('Set Parameters').item.json.TEMP_DIR }}/scenes"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1040, 0],
+      "id": "e1c7f3a2-5c4b-4f8b-93c3-2f2a7c8d4b55",
+      "name": "Extract Scenes"
+    },
+    {
+      "parameters": {
+        "command": "=set -e; SCENES_DIR={{ $('Set Parameters').item.json.TEMP_DIR }}/scenes; PYBIN={{ $('Set Parameters').item.json.PYTHON_BIN }}; PY={{ $('Set Parameters').item.json.SCRIPT_DIR }}/clip_factory.py; JSON={{ $('Set Parameters').item.json.TEMP_DIR }}/top_scenes.json; OUT={{ $('Set Parameters').item.json.OUTPUT_DIR }}; mkdir -p \"$OUT\"; i=0; for f in $(LC_ALL=C find \"$SCENES_DIR\" -maxdepth 1 -type f -name \"scene_*.mp4\" | sort); do i=$((i+1)); \"$PYBIN\" \"$PY\" convert-to-vertical \"$f\"; vf=\"${f%.mp4}_vertical.mp4\"; \"$PYBIN\" \"$PY\" add-subtitles --input-video \"$vf\" --scenes-json \"$JSON\" --scene-index $((i-1)) --output-dir \"$OUT\" --prefix short; rm -f \"$vf\" \"$f\"; done"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1248, 0],
+      "id": "a9d4c6e7-7b8a-4d3e-9f21-3c4d5e6f7a8b",
+      "name": "Process Scenes"
+    },
+    {
+      "parameters": {
+        "command": "=set -e; rm -f {{ $('Set Parameters').item.json.TEMP_DIR }}/scenes.json {{ $('Set Parameters').item.json.TEMP_DIR }}/transcribed.json {{ $('Set Parameters').item.json.TEMP_DIR }}/top_scenes.json; rm -rf {{ $('Set Parameters').item.json.TEMP_DIR }}/scenes"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1456, 0],
+      "id": "cleanup-temp-files",
+      "name": "Cleanup"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking 'Execute workflow'": {
+      "main": [[{ "node": "Set Parameters", "type": "main", "index": 0 }]]
+    },
+    "Set Parameters": {
+      "main": [[{ "node": "Detect Scenes", "type": "main", "index": 0 }]]
+    },
+    "Detect Scenes": {
+      "main": [[{ "node": "Transcribe", "type": "main", "index": 0 }]]
+    },
+    "Transcribe": {
+      "main": [[{ "node": "Score Scenes", "type": "main", "index": 0 }]]
+    },
+    "Score Scenes": {
+      "main": [[{ "node": "Extract Scenes", "type": "main", "index": 0 }]]
+    },
+    "Extract Scenes": {
+      "main": [[{ "node": "Process Scenes", "type": "main", "index": 0 }]]
+    },
+    "Process Scenes": {
+      "main": [[{ "node": "Cleanup", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "cc1cd275-b603-43dd-9780-7a52f6cfcce7",
+  "meta": {
+    "instanceId": "8f9eb655c6a302cdd5c6b1214fe1feef39c7685841905fc5f11e3fcb3a7bd4fa"
+  },
+  "id": "pKbfk9QGCqUeEYHs",
+  "tags": []
+}
