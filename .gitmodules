@@ -1,3 +1,6 @@
 [submodule "scripts/clip_factory"]
 	path = scripts/clip_factory
 	url = https://github.com/ogolknev/extract_scenes.git
+[submodule "scripts/auto_posting"]
+	path = scripts/auto_posting
+	url = https://github.com/ogolknev/auto_posting.git
