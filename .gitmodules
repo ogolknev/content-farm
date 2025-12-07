@@ -1,0 +1,3 @@
+[submodule "scripts/clip_factory"]
+	path = scripts/clip_factory
+	url = https://github.com/ogolknev/extract_scenes.git
