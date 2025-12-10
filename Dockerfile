@@ -1,29 +1,24 @@
 FROM debian:bookworm-slim
 
-ENV DEBIAN_FRONTEND=noninteractive \
-        NODE_ENV=production \
-        NPM_CONFIG_FUND=0 \
-        NPM_CONFIG_AUDIT=0
+ENV DEBIAN_FRONTEND=noninteractive
 
 # System dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-            ca-certificates \
-            curl \
-            gnupg \
-            tzdata \
-            python3 \
-            python3-venv \
-            python3-pip \
-            ffmpeg \
-        && rm -rf /var/lib/apt/lists/*
-
-# Install Node.js LTS via NodeSource
+RUN apt-get update && apt-get install -y \
+      ca-certificates \
+      curl \
+      gnupg \
+      tzdata \
+      python3 \
+      python3-venv \
+      python3-pip \
+      ffmpeg \
+    && rm -rf /var/lib/apt/lists/*# Install Node.js LTS via NodeSource
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get update && apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
 # Install n8n with npm
-RUN npm install -g n8n && npm cache clean --force
+RUN npm install -g n8n
 
 # Create Python venv
 RUN python3 -m venv /opt/venv

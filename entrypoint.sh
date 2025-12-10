@@ -8,7 +8,7 @@ if ! id -u n8n >/dev/null 2>&1; then
   exit 1
 fi
 chown -R n8n:n8n /data/io || { echo "Ошибка: не удалось назначить владельца n8n для /data/io"; exit 1; }
-chmod -R 755 /data/io || { echo "Ошибка: не удалось установить права 755 для /data/io"; exit 1; }
+chmod -R 777 /data/io || { echo "Ошибка: не удалось установить права 755 для /data/io"; exit 1; }
 echo "Директория /data/io настроена успешно."
 
 # Импорт всех workflow из /data/n8n_workflows (если есть)
