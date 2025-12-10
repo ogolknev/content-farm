@@ -12,10 +12,11 @@ chmod -R 755 /data/io || { echo "Ошибка: не удалось устано�
 echo "Директория /data/io настроена успешно."
 
 # Импорт всех workflow из /data/n8n_workflows (если есть)
+# -L флаг: следует symlink'ам и обрабатывает реальные файлы
 if [ -d /data/n8n_workflows ]; then
   echo "Импорт workflow из /data/n8n_workflows..."
   chown -R n8n:n8n /data/n8n_workflows || true
-  for wf in /data/n8n_workflows/*.json; do
+  find -L /data/n8n_workflows -maxdepth 1 -name "*.json" -type f | while read wf; do
     [ -f "$wf" ] || continue
     echo "Импорт: $wf"
     su -s /bin/bash n8n -c "n8n import:workflow --separate --input '$wf'" || true
